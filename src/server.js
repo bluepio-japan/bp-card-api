@@ -4,13 +4,21 @@ const multer = require('multer');
 const { google } = require('googleapis');
 const vision = require('@google-cloud/vision');
 const stringSimilarity = require('string-similarity');
+const cors = require('cors'); 
 const app = express();
+app.use(cors());
+
+const cardsRouter = require('../routes/cards');
+const expansionRouter = require('../routes/expansion');
 
 const client = new vision.ImageAnnotatorClient({
     keyFilename: process.env.GOOGLE_APPLICATION_CREDENTIALS
 });
 
 const upload = multer({ dest: 'uploads/' });
+
+app.use('/cards', cardsRouter);
+app.use('/expansion', expansionRouter);
 
 // 除外ワードと例外
 const exclusionKeywords = [
@@ -53,8 +61,8 @@ const auth = new google.auth.GoogleAuth({
 });
 
 const SPREADSHEET_ID = process.env.SPREADSHEET_ID;
-const SHEET_RANGE = "CardList!A:D";
-const EXPANSION_MARKS_RANGE = "expansion!A:A";
+const SHEET_RANGE = process.env.SHEET_RANGE || 'カード情報マスター!B2:E';
+const EXPANSION_RANGE = process.env.EXPANSION_RANGE || 'エキスパンション!A2:A';
 
 // **スプレッドシートからexpansionのリストを取得** 
 async function getExpansionMarks() {
@@ -63,7 +71,7 @@ async function getExpansionMarks() {
         const { data } = await sheets.spreadsheets.values.get({
             auth: client,
             spreadsheetId: SPREADSHEET_ID,
-            range: EXPANSION_MARKS_RANGE
+            range: EXPANSION_RANGE
         });
 
         const expansions = data.values?.flat().map(value => value.trim().toUpperCase()) || [];

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>カード撮影アプリ</title>
+  <link rel="manifest" href="/manifest.json" />
+</head>
+<body>
+  <h1>カードを撮影してください</h1>
+  <input type="file" accept="image/*" capture="environment" id="cameraInput" />
+  
+  <script>
+    document.getElementById('cameraInput').addEventListener('change', async function (event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      // 画像をFormDataでサーバーに送信（OCR処理用）
+      const formData = new FormData();
+      formData.append('image', file);
+
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData
+      });
+
+      const result = await response.json();
+
+      // AppSheetフォームに遷移（OCR結果と画像URLをクエリに）
+      const appSheetURL = `https://www.appsheet.com/start/xxxx?param1=${encodeURIComponent(result.cardName)}&imageUrl=${encodeURIComponent(result.imageUrl)}`;
+      window.location.href = appSheetURL;
+    });
+  </script>
+</body>
+</html>

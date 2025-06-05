@@ -18,14 +18,12 @@ async function initializeGoogleSheets() {
     }
 }
 
-// スプレッドシートのカード名リストを取得する関数
+// SHEET_RANGE を読み込む関数
 async function getCardList() {
     try {
         const sheets = await initializeGoogleSheets();
         const spreadsheetId = process.env.SPREADSHEET_ID; // .env からスプレッドシートIDを取得
-        const sheetName = process.env.SHEET_NAME || 'CardList'; // .env からシート名を取得（デフォルトは CardList）
-
-        const range = `${sheetName}!A:A`; 
+        const range = process.env.SHEET_RANGE || 'カード情報マスター!B:E';
 
         const response = await sheets.spreadsheets.values.get({
             spreadsheetId,
@@ -37,11 +35,57 @@ async function getCardList() {
             return [];
         }
 
-        return response.data.values.flat(); // 1次元配列として返す
+        return response.data.values;
     } catch (error) {
         console.error('スプレッドシートのデータ取得に失敗:', error);
         throw error;
     }
 }
 
-module.exports = { getCardList };
+// EXPANSION_RANGE を読み込む関数
+async function getExpansionList() {
+    try {
+        const sheets = await initializeGoogleSheets();
+        const spreadsheetId = process.env.SPREADSHEET_ID;
+        const range = process.env.EXPANSION_RANGE || 'エキスパンション!A:A';
+
+        const response = await sheets.spreadsheets.values.get({
+            spreadsheetId,
+            range,
+        });
+
+        if (!response.data.values || response.data.values.length === 0) {
+            console.warn(`スプレッドシート「${range}」にデータがありません。`);
+            return [];
+        }
+
+        return response.data.values.flat();
+    } catch (error) {
+        console.error('エキスパンション一覧の取得に失敗:', error);
+        throw error;
+    }
+}
+
+// 撮影テーブルに1行追加する関数
+async function appendRowToSheet(sheetName, values) {
+    try {
+        const sheets = await initializeGoogleSheets();
+        const spreadsheetId = process.env.SPREADSHEET_ID;
+
+        const response = await sheets.spreadsheets.values.append({
+            spreadsheetId,
+            range: `${sheetName}!A1`,
+            valueInputOption: 'USER_ENTERED',
+            insertDataOption: 'INSERT_ROWS',
+            resource: {
+                values: [values],
+            },
+        });
+        return response.data;
+    } catch (error) {
+        console.error('スプレッドシートへの追加に失敗:', error);
+        throw error;
+    }
+}
+
+module.exports = { getCardList, getExpansionList };

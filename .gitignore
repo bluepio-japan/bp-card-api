@@ -43,5 +43,8 @@ uploads/
 config/bp-trading-card-manager-*.json
 config/*.local
 
+#サービスアカウントキー
+src/config/service-account.json
+
 #Git管理対象外のルール（例外的に`.gitignore`は追跡）
 !.gitignore
