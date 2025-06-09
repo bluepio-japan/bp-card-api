@@ -27,6 +27,12 @@ router.post('/', async (req, res) => {
         const ocrText = detections.length > 0 ? detections[0].description.trim() : '';
 
         console.log('OCR結果:', ocrText);
+        
+        // 🔧 OCR結果をそれぞれの変数に代入（ここが今回の修正点）
+        const ocrCardName = ocrText;
+        const ocrEM = '';
+        const ocrCardList = '';
+        const ocrRarity = '';
 
         // ID行にOCR結果を上書き保存
         await updateRowInSheet({
@@ -34,10 +40,10 @@ router.post('/', async (req, res) => {
           matchColumn: 'ID',
           matchValue: id,
           updateData: {
-            カード名: ocrText,
-            EM: em || '',
-            カードリスト: cardList || '',
-            レアリティ: rarity || ''
+            'カード名': ocrCardName,
+            'EM': ocrEM,
+            'カードリスト': ocrCardList,
+            'レアリティ': ocrRarity
           }
         });
 
