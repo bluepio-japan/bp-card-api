@@ -3,8 +3,25 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>カード撮影アプリ</title>
-  <link rel="manifest" href="/manifest.json" />
+  <title>トレカ撮影アプリ</title>
+  <link rel="manifest" href="/pwa/manifest.json" />
+
+  <!-- 通常のファビコン -->
+  <link rel="icon" href="/pwa/img/icon-192.png" />
+
+  <!-- iOS向けアイコン -->
+  <link rel="apple-touch-icon" href="/pwa/img/icon-192.png" />
+
+  <!-- Service Worker の登録 -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/pwa/serviceWorker.js')
+          .then(reg => console.log('✅ Service Worker registered:', reg.scope))
+          .catch(err => console.error('❌ Service Worker registration failed:', err));
+      });
+    }
+  </script>
 </head>
 <body>
   <h1>カードを撮影してください</h1>
@@ -19,16 +36,76 @@
       const formData = new FormData();
       formData.append('image', file);
 
-      const response = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData
-      });
+      try {
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData
+        });
 
-      const result = await response.json();
+        const result = await response.json();
 
-      // AppSheetフォームに遷移（OCR結果と画像URLをクエリに）
-      const appSheetURL = `https://www.appsheet.com/start/xxxx?param1=${encodeURIComponent(result.cardName)}&imageUrl=${encodeURIComponent(result.imageUrl)}`;
-      window.location.href = appSheetURL;
+        // AppSheetフォームに遷移（OCR結果と画像URLをクエリに）
+        const appSheetURL = `https://www.appsheet.com/start/90fe845c-b0e5-438d-ad50-48c0bfaebc5a#control=撮影フォーム&defaults=` + encodeURIComponent(JSON.stringify({
+            "カード名": result.ocrText || "",
+            "EM": result.em || "",
+            "カードリスト": result.cardList || "",
+            "レアリティ": result.rarity || "",
+            "画像": result.imageUrl || ""
+          }));
+
+        window.location.href = appSheetURL;
+      } catch (err) {
+        console.error('送信に失敗しました:', err);
+        alert('画像の送信に失敗しました。');
+      }
+    });
+  </script>
+
+  <h2>テスト用フォーム（手動でOCR結果を送信）</h2>
+  <form id="uploadForm">
+    <label>カード画像：</label><br>
+    <input type="file" id="imageInput" accept="image/*" capture="environment"><br><br>
+
+    <label>OCR結果（手動入力）：</label><br>
+    <input type="text" id="ocrInput" placeholder="カード名など"><br><br>
+
+    <button type="submit">送信</button>
+  </form>
+
+  <p id="status"></p>
+
+  <script>
+    // テスト用フォームの送信処理
+    document.getElementById('uploadForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const status = document.getElementById('status');
+      status.textContent = '送信中...';
+
+      const imageInput = document.getElementById('imageInput');
+      const ocrInput = document.getElementById('ocrInput');
+      const file = imageInput.files[0];
+
+      if (!file) {
+        status.textContent = '画像が選択されていません。';
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('image', file);
+      formData.append('ocrText', ocrInput.value);
+
+      try {
+        const res = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData
+        });
+
+        const result = await res.json();
+        status.textContent = result.message || '送信成功';
+      } catch (err) {
+        console.error(err);
+        status.textContent = '送信に失敗しました。';
+      }
     });
   </script>
 </body>

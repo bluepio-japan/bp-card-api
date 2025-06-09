@@ -1,60 +1,59 @@
-//  Vision API 連携とGoogle Sheets書き込み用に必要なモジュールを読み込む
-import vision from '@google-cloud/vision';
-import { appendRowToSheet } from '../src/utils/googlesheets.js'; 
+// 必要なモジュールを読み込む
+const express = require('express');
+const router = express.Router();
+const vision = require('@google-cloud/vision');
+const { appendRowToSheet, updateRowInSheet } = require('../src/utils/googlesheets');
+require('dotenv').config();
 
 //  Vision API クライアント初期化
 const client = new vision.ImageAnnotatorClient({
   keyFilename: process.env.GOOGLE_APPLICATION_CREDENTIALS,
 });
 
-export const config = {
-  api: {
-    bodyParser: true,
-  },
-};
-
-export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ message: 'Only POST requests allowed' });
-  }
-
+// POST /api/upload の処理
+router.post('/', async (req, res) => {
       try {
-        const { 画像, カード名, EM, カードリスト, レアリティ } = req.body;
+        const { id, imageUrl, cardName, em, cardList, rarity } = req.body;
 
-        if (!画像 || !カード名) {
-          return res.status(400).json({ message: 'Missing image URL or card name' });
+        if (!imageUrl || !id) {
+          return res.status(400).json({ message: 'Missing image URL or row ID' });
         }
 
-        console.log('AppSheetから受信:', { 画像, カード名, EM, カードリスト, レアリティ });
+        console.log('AppSheetから受信:', { id, imageUrl, cardName, em, cardList, rarity });
 
         // Vision API で画像URLを解析
-        const [result] = await client.textDetection(画像);
+        const [result] = await client.textDetection(imageUrl);
         const detections = result.textAnnotations;
         const ocrText = detections.length > 0 ? detections[0].description.trim() : '';
 
-        console.log('OCR Result:', ocrText);
+        console.log('OCR結果:', ocrText);
 
-        // 「撮影」シートに1行追加
-        const newRow = [
-          '',                         // A列：ID（AppSheet 側で自動生成）
-          imageUrl,                   // B列：画像URL
-          ocrText,                    // C列：カード名（OCR結果）
-          em || '',                   // D列：EM
-          cardList || '',             // E列：カードリスト
-          rarity || '',               // F列：レアリティ
-          '未処理',                    // G列：ステータス
-          new Date().toISOString(),   // H列：作成日時
-        ];
-
-        await appendRowToSheet('撮影', newRow);
+        // ID行にOCR結果を上書き保存
+        await updateRowInSheet({
+          sheetName: '撮影',
+          matchColumn: 'ID',
+          matchValue: id,
+          updateData: {
+            カード名: ocrText,
+            EM: em || '',
+            カードリスト: cardList || '',
+            レアリティ: rarity || ''
+          }
+        });
 
         res.status(200).json({
-          message: 'Upload and OCR completed',
-          imageUrl: 画像,
+          message: 'OCR完了＆更新成功',
+          id,
+          imageUrl,
           ocrText,
+          em,
+          cardList,
+          rarity
         });
       } catch (error) {
-        console.error('❌ OCR failed:', error);
+        console.error('OCR failed:', error);
         res.status(500).json({ message: 'OCR failed', error: error.message });
       } 
-}
+});
+
+module.exports = router;

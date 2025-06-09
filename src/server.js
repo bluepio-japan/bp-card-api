@@ -10,6 +10,7 @@ app.use(cors());
 
 const cardsRouter = require('../routes/cards');
 const expansionRouter = require('../routes/expansion');
+const uploadRouter = require('../api/upload');
 
 const client = new vision.ImageAnnotatorClient({
     keyFilename: process.env.GOOGLE_APPLICATION_CREDENTIALS
@@ -19,6 +20,7 @@ const upload = multer({ dest: 'uploads/' });
 
 app.use('/cards', cardsRouter);
 app.use('/expansion', expansionRouter);
+app.use('/api/upload', uploadRouter);
 
 // 除外ワードと例外
 const exclusionKeywords = [
