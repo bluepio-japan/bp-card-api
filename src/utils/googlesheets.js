@@ -88,4 +88,60 @@ async function appendRowToSheet(sheetName, values) {
     }
 }
 
-module.exports = { getCardList, getExpansionList };
+async function updateRowInSheet({ sheetName, matchColumn, matchValue, updateData }) {
+    try {
+        const sheets = await initializeGoogleSheets();
+        const spreadsheetId = process.env.SPREADSHEET_ID;
+
+        // データ取得（例：A列〜Z列 最大3万行想定）
+        const getRes = await sheets.spreadsheets.values.get({
+            spreadsheetId,
+            range: `${sheetName}!A1:Z30000`,
+        });
+
+        const rows = getRes.data.values || [];
+        const headers = rows[0];
+        const matchIndex = headers.indexOf(matchColumn);
+
+        if (matchIndex === -1) {
+            throw new Error(`列「${matchColumn}」が見つかりません。`);
+        }
+
+        const rowIndex = rows.findIndex((row, i) => i > 0 && row[matchIndex] === matchValue);
+        if (rowIndex === -1) {
+            throw new Error(`一致するID「${matchValue}」が見つかりません。`);
+        }
+
+        // 更新内容のマッピング
+        const newRow = [...(rows[rowIndex] || [])];
+        for (const [key, value] of Object.entries(updateData)) {
+            const colIndex = headers.indexOf(key);
+            if (colIndex !== -1) {
+                newRow[colIndex] = value;
+            }
+        }
+
+        // ピンポイントでその行を上書き
+        const range = `${sheetName}!A${rowIndex + 1}:Z${rowIndex + 1}`;
+        await sheets.spreadsheets.values.update({
+            spreadsheetId,
+            range,
+            valueInputOption: 'USER_ENTERED',
+            resource: {
+                values: [newRow],
+            },
+        });
+
+        return true;
+    } catch (error) {
+        console.error('行の更新に失敗:', error);
+        throw error;
+    }
+}
+
+module.exports = {
+    getCardList,
+    getExpansionList,
+    appendRowToSheet,
+    updateRowInSheet,
+};

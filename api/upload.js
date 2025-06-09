@@ -27,17 +27,17 @@ router.post('/', async (req, res) => {
         const ocrText = detections.length > 0 ? detections[0].description.trim() : '';
 
         console.log('OCR結果:', ocrText);
-        
-        // 🔧 OCR結果をそれぞれの変数に代入（ここが今回の修正点）
+
+        // 🔧 OCR結果をそれぞれの変数に代入
         const ocrCardName = ocrText;
         const ocrEM = '';
         const ocrCardList = '';
         const ocrRarity = '';
 
-        // ID行にOCR結果を上書き保存
+        // 撮影シートのID列が一致する行のみ更新
         await updateRowInSheet({
           sheetName: '撮影',
-          matchColumn: 'ID',
+          matchColumn: 'ID', // 撮影シートのL列がID
           matchValue: id,
           updateData: {
             'カード名': ocrCardName,
