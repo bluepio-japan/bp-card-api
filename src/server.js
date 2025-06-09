@@ -5,8 +5,10 @@ const { google } = require('googleapis');
 const vision = require('@google-cloud/vision');
 const stringSimilarity = require('string-similarity');
 const cors = require('cors'); 
+
 const app = express();
 app.use(cors());
+app.use(express.json()); 
 
 const cardsRouter = require('../routes/cards');
 const expansionRouter = require('../routes/expansion');
@@ -336,7 +338,7 @@ process.on('unhandledRejection', (reason, promise) => {
 // **サーバー起動**
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`🚀 サーバーがポート ${PORT} で起動しました`);
+    console.log(`サーバーがポート ${PORT} で起動しました`);
 });
 
 // **ローカル動作確認用エンドポイント**
