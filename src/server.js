@@ -1,18 +1,20 @@
-require('dotenv').config({ path: __dirname + '/../.env' });
+require('dotenv').config({ path: require('path').join(__dirname, '../.env') });
+
 const express = require('express');
 const multer = require('multer');
 const { google } = require('googleapis');
 const vision = require('@google-cloud/vision');
 const stringSimilarity = require('string-similarity');
-const cors = require('cors'); 
+const cors = require('cors');
+const path = require('path');
 
 const app = express();
 app.use(cors());
 app.use(express.json()); 
 
-const cardsRouter = require('../routes/cards');
-const expansionRouter = require('../routes/expansion');
-const uploadRouter = require('../api/upload');
+const cardsRouter = require(path.join(__dirname, '../routes/cards'));
+const expansionRouter = require(path.join(__dirname, '../routes/expansion'));
+const uploadRouter = require(path.join(__dirname, '../api/upload'));
 
 const client = new vision.ImageAnnotatorClient({
     keyFilename: process.env.GOOGLE_APPLICATION_CREDENTIALS
@@ -20,9 +22,12 @@ const client = new vision.ImageAnnotatorClient({
 
 const upload = multer({ dest: 'uploads/' });
 
+// 🔧 APIルーティング設定
 app.use('/cards', cardsRouter);
 app.use('/expansion', expansionRouter);
 app.use('/api/upload', uploadRouter);
+
+module.exports = app;
 
 // 除外ワードと例外
 const exclusionKeywords = [

@@ -2,8 +2,8 @@
 const express = require('express');
 const router = express.Router();
 const vision = require('@google-cloud/vision');
+require('dotenv').config({ path: require('path').join(__dirname, '../.env') });
 const { appendRowToSheet, updateRowInSheet } = require('../src/utils/googlesheets');
-require('dotenv').config();
 
 //  Vision API クライアント初期化
 const client = new vision.ImageAnnotatorClient({
