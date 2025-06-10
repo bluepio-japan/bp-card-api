@@ -14,7 +14,7 @@ app.use(express.json());
 
 const cardsRouter = require(path.join(__dirname, '../routes/cards'));
 const expansionRouter = require(path.join(__dirname, '../routes/expansion'));
-const uploadRouter = require(path.join(__dirname, '../api/upload'));
+const uploadRouter = require(path.join(__dirname, '../routes/upload'));
 
 const client = new vision.ImageAnnotatorClient({
     keyFilename: process.env.GOOGLE_APPLICATION_CREDENTIALS
