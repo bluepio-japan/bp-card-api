@@ -2,6 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const vision = require('@google-cloud/vision');
+const axios = require('axios');
 require('dotenv').config({ path: require('path').join(__dirname, '../.env') });
 const { appendRowToSheet, updateRowInSheet } = require('../src/utils/googlesheets');
 
@@ -21,8 +22,20 @@ router.post('/', async (req, res) => {
 
         console.log('AppSheetから受信:', { id, imageUrl, cardName, em, cardList, rarity });
 
-        // Vision API で画像URLを解析
-        const [result] = await client.textDetection(imageUrl);
+        // imageUrlに完全URLを組み立てる
+        const fullImageUrl = `https://www.appsheetusercontent.com/${imageUrl}`;
+        console.log('画像完全URL:', fullImageUrl);
+
+        // Axiosで組み立てた完全URLからバイナリ取得
+        const response = await axios.get(fullImageUrl, { responseType: 'arraybuffer' });
+        const imageBuffer = Buffer.from(response.data, 'binary');
+        const base64Image = imageBuffer.toString('base64');
+
+        // 🆕 Vision API で画像をbase64として解析
+        const [result] = await client.textDetection({
+          image: { content: base64Image }
+        });
+
         const detections = result.textAnnotations;
         const ocrText = detections.length > 0 ? detections[0].description.trim() : '';
 
