@@ -49,3 +49,6 @@ src/config/service-account.json
 #Git管理対象外のルール（例外的に`.gitignore`は追跡）
 !.gitignore
 .vercel
+
+#開発用
+src/index.js

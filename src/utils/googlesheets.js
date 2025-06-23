@@ -4,9 +4,14 @@ require('dotenv').config(); // .envを読み込む
 // Google Sheets APIのクライアント初期化関数
 async function initializeGoogleSheets() {
     try {
+        const rawCredentials = process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON;
+        if (!rawCredentials) {
+            throw new Error('環境変数 GOOGLE_APPLICATION_CREDENTIALS_JSON が未設定です。');
+        }
+
         const auth = new google.auth.GoogleAuth({
-            keyFilename: process.env.GOOGLE_APPLICATION_CREDENTIALS, // JSONキーのパス
-            scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly'],
+            keyFilename: process.env.GOOGLE_APPLICATION_CREDENTIALS,
+            scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly', 'https://www.googleapis.com/auth/spreadsheets'],
         });
 
         const client = await auth.getClient();
@@ -31,7 +36,7 @@ async function getCardList() {
         });
 
         if (!response.data.values || response.data.values.length === 0) {
-            console.warn(`スプレッドシート「${sheetName}」にデータがありません。`);
+            console.warn(`スプレッドシートの範囲「${range}」にデータがありません。`);
             return [];
         }
 
@@ -55,7 +60,7 @@ async function getExpansionList() {
         });
 
         if (!response.data.values || response.data.values.length === 0) {
-            console.warn(`スプレッドシート「${range}」にデータがありません。`);
+            console.warn(`スプレッドシートの範囲「${range}」にデータがありません。`);
             return [];
         }
 

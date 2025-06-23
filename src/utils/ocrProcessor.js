@@ -1,7 +1,11 @@
 // stringSimilarityライブラリは照合ロジックで使用するためインポートします。
 const stringSimilarity = require('string-similarity');
 const { auth, sheets } = require('./googlesheets');
-const { SPREADSHEET_ID, SHEET_RANGE, EXPANSION_RANGE } = require('../config/service-account.json');
+
+// .env から環境変数を使って読み取る
+const SPREADSHEET_ID = process.env.SPREADSHEET_ID;
+const SHEET_RANGE = process.env.SHEET_RANGE;
+const EXPANSION_RANGE = process.env.EXPANSION_RANGE;
 
 // 除外ワードと例外
 const exclusionKeywords = [

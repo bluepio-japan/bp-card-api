@@ -1,0 +1,20 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "src/server.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "src/server.js"
+    }
+  ],
+  "env": {
+    "SPREADSHEET_ID": "1hPHmkrA0byMQiaUMCNq9rQjlVLRlyM0GmRUGgg4-Jn0",
+    "SHEET_RANGE": "SHEET_RANGE",
+    "EXPANSION_RANGE": "EXPANSION_RANGE"
+  }
+}
